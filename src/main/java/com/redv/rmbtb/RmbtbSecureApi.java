@@ -23,7 +23,6 @@ package com.redv.rmbtb;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,6 +46,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The RMBTB Secure API class. Set the constants here.
@@ -150,6 +151,9 @@ interface RmbtbApi {
 }
 
 public class RmbtbSecureApi implements RmbtbApi {
+
+	private final Logger log = LoggerFactory.getLogger(RmbtbSecureApi.class);
+
 	private String currPair;
 	private String pubkey;
 	private String passphrase;
@@ -162,10 +166,13 @@ public class RmbtbSecureApi implements RmbtbApi {
 
 	public RmbtbSecureApi(String pubkey, String passphrase, String currPair) {
 
+		log.debug("pubKey: {}, passphrase: {}", pubkey, passphrase);
+
 		this.currPair = currPair;
 		this.pubkey = pubkey;
 		this.passphrase = passphrase;
-		secret = "";
+
+		secret = null;
 		expires = Calendar.getInstance();
 
 	}
@@ -262,7 +269,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		if (auth) {
 			Calendar maxAge = Calendar.getInstance();
 			maxAge.add(Calendar.MINUTE, -1);
-			if (secret == "" || expires.before(maxAge)) {
+			if (secret == null || expires.before(maxAge)) {
 				loadSecret();
 			}
 			params.put("nonce", String.valueOf(System.nanoTime()) + "000");
@@ -286,6 +293,14 @@ public class RmbtbSecureApi implements RmbtbApi {
 			headers.put("Rest-Sign", getRequestSig(paramStr));
 		}
 
+		if (log.isDebugEnabled()) {
+			for (Map.Entry<String, String> entry : headers.entrySet()) {
+				log.debug("header: {} = {}", entry.getKey(), entry.getValue());
+			}
+
+			log.debug("paramString: {}", paramStr);
+		}
+
 		JSONObject data = doHttpRequest(api, httpMethod, paramStr, headers);
 
 		return data;
@@ -298,6 +313,9 @@ public class RmbtbSecureApi implements RmbtbApi {
 
 		// Load secret from file
 		if (dat.exists()) {
+
+			log.debug("Secret file exists: {}", dat.getPath());
+
 			expires.setTimeInMillis(dat.lastModified());
 			expires.add(Calendar.HOUR, 2);
 
@@ -305,24 +323,29 @@ public class RmbtbSecureApi implements RmbtbApi {
 			maxAge.add(Calendar.MINUTE, -1);
 
 			if (expires.after(maxAge)) {
+				log.debug("The secret does not expire.");
+
 				StringBuilder datContents = new StringBuilder(
 						(int) dat.length());
-				Scanner scanner = null;
-				try {
-					scanner = new Scanner(dat);
+				try (Scanner scanner = new Scanner(dat)) {
 					while (scanner.hasNextLine()) {
 						datContents.append(scanner.nextLine());
 					}
-				} catch (FileNotFoundException e) {
-				} finally {
-					scanner.close();
 				}
+
 				secret = datContents.toString();
 				expires = Calendar.getInstance();
 				expires.add(Calendar.HOUR, 2);
+
+				if (log.isDebugEnabled()) {
+					log.debug("Read secret from file, the secret is {}, length is {}.", secret, secret.length());
+				}
+
 				return;
 			}
 		}
+
+		log.debug("Getting secret by API calling...");
 
 		// Need to fetch a new secret
 		HashMap<String, String> headers = new HashMap<String, String>();
@@ -334,19 +357,17 @@ public class RmbtbSecureApi implements RmbtbApi {
 		JSONObject data = doHttpRequest("getsecret", "POST", params, headers);
 
 		secret = (String) data.get("secret");
+
+		if (log.isDebugEnabled()) {
+			log.debug("Got secret by API calling, the secrit is {}, length is {}.", secret, secret.length());
+		}
+
 		expires = Calendar.getInstance();
 		expires.add(Calendar.HOUR, 2);
 
-		FileWriter fw = new FileWriter(dat);
-
-		try {
+		try (FileWriter fw = new FileWriter(dat)) {
 			fw.write(secret);
-		} catch (IOException e) {
-			System.out.println(e);
-		} finally {
-			fw.close();
 		}
-
 	}
 
 	// Perform the request
@@ -354,7 +375,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 			String params, HashMap<String, String> headers) throws IOException,
 			ProtocolException, ParseException {
 
-		api = httpMethod == "GET" ? api += "?" + params : api;
+		api = "GET".equals(httpMethod) ? (api += "?" + params) : api;
 		URL uObj = new URL(urlBaseLoc + currPair + "/" + api);
 
 		HttpsURLConnection conn = (HttpsURLConnection) uObj.openConnection();
@@ -365,7 +386,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 			conn.setRequestProperty(entry.getKey(), entry.getValue());
 		}
 
-		if (httpMethod == "POST") {
+		if ("POST".equals(httpMethod)) {
 			conn.setRequestMethod("POST");
 
 			conn.setDoOutput(true);
