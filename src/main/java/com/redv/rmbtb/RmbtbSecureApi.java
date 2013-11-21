@@ -272,7 +272,8 @@ public class RmbtbSecureApi implements RmbtbApi {
 			if (secret == null || expires.before(maxAge)) {
 				loadSecret();
 			}
-			params.put("nonce", String.valueOf(System.nanoTime()) + "000");
+//			params.put("nonce", String.valueOf(System.nanoTime()) + "000");
+			params.put("nonce", String.valueOf(System.currentTimeMillis()));
 		}
 
 		String paramStr = "";
@@ -427,6 +428,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 	private String getRequestSig(String data) throws NoSuchAlgorithmException,
 			InvalidKeyException {
 
+		log.debug("getRequestSig for {} with {}", data, secret);
 		Mac mac = Mac.getInstance("HmacSHA512");
 		SecretKeySpec secret_spec = new SecretKeySpec(secret.getBytes(),
 				"HmacSHA512");
