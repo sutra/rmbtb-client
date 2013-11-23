@@ -43,6 +43,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.codec.binary.Base64;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -84,7 +85,7 @@ interface RmbtbApi {
 	 *
 	 * @return JSONObject market info
 	 */
-	public JSONObject getOrders() throws Exception;
+	public JSONArray getOrders() throws Exception;
 
 	/**
 	 * Adds an order -- double params
@@ -179,22 +180,22 @@ public class RmbtbSecureApi implements RmbtbApi {
 
 	@Override
 	public JSONObject getInfo() throws Exception {
-		return doRequest("getinfo", "GET", true);
+		return (JSONObject) doRequest("getinfo", "GET", true);
 	}
 
 	@Override
 	public JSONObject getFunds() throws Exception {
-		return doRequest("wallets", "GET", true);
+		return (JSONObject) doRequest("wallets", "GET", true);
 	}
 
 	@Override
 	public JSONObject ticker() throws Exception {
-		return doRequest("ticker", "GET", false);
+		return (JSONObject) doRequest("ticker", "GET", false);
 	}
 
 	@Override
-	public JSONObject getOrders() throws Exception {
-		return doRequest("orders", "GET", true);
+	public JSONArray getOrders() throws Exception {
+		return (JSONArray) doRequest("orders", "GET", true);
 	}
 
 	@Override
@@ -208,7 +209,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		params.put("price",
 				new DecimalFormat("00000000.00000000").format(price));
 
-		return doRequest("order/add", "POST", true, params);
+		return (JSONObject) doRequest("order/add", "POST", true, params);
 	}
 
 	@Override
@@ -220,7 +221,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		params.put("amount_int", String.valueOf(amount));
 		params.put("price_int", String.valueOf(price));
 
-		return doRequest("order/add", "POST", true, params);
+		return (JSONObject) doRequest("order/add", "POST", true, params);
 	}
 
 	@Override
@@ -229,7 +230,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("oid", String.valueOf(orderId));
 
-		return doRequest("order/cancel", "POST", true, params);
+		return (JSONObject) doRequest("order/cancel", "POST", true, params);
 	}
 
 	@Override
@@ -238,32 +239,32 @@ public class RmbtbSecureApi implements RmbtbApi {
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("oid", String.valueOf(orderId));
 
-		return doRequest("order/fetch", "GET", true, params);
+		return (JSONObject) doRequest("order/fetch", "GET", true, params);
 	}
 
 	@Override
 	public JSONObject getTrades() throws Exception {
-		return doRequest("trades/mine", "GET", true);
+		return (JSONObject) doRequest("trades/mine", "GET", true);
 	}
 
 	@Override
 	public JSONObject lastTrades() throws Exception {
-		return doRequest("trades/all", "GET", false);
+		return (JSONObject) doRequest("trades/all", "GET", false);
 	}
 
 	@Override
 	public JSONObject getDepth() throws Exception {
-		return doRequest("depth", "GET", false);
+		return (JSONObject) doRequest("depth", "GET", false);
 	}
 
-	private JSONObject doRequest(String api, String httpMethod, boolean auth)
+	private Object doRequest(String api, String httpMethod, boolean auth)
 			throws Exception {
 
 		HashMap<String, String> params = new HashMap<String, String>();
 		return doRequest(api, httpMethod, auth, params);
 	}
 
-	private JSONObject doRequest(String api, String httpMethod, boolean auth,
+	private Object doRequest(String api, String httpMethod, boolean auth,
 			HashMap<String, String> params) throws Exception {
 
 		if (auth) {
@@ -302,7 +303,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 			log.debug("paramString: {}", paramStr);
 		}
 
-		JSONObject data = doHttpRequest(api, httpMethod, paramStr, headers);
+		Object data =  doHttpRequest(api, httpMethod, paramStr, headers);
 
 		return data;
 	}
@@ -355,7 +356,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		String params = "api_passphrase="
 				+ URLEncoder.encode(passphrase, "UTF-8");
 
-		JSONObject data = doHttpRequest("getsecret", "POST", params, headers);
+		JSONObject data = (JSONObject) doHttpRequest("getsecret", "POST", params, headers);
 
 		secret = (String) data.get("secret");
 
@@ -372,7 +373,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 	}
 
 	// Perform the request
-	private JSONObject doHttpRequest(String api, String httpMethod,
+	private Object doHttpRequest(String api, String httpMethod,
 			String params, HashMap<String, String> headers) throws IOException,
 			ProtocolException, ParseException {
 
@@ -418,7 +419,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 			String strErr = (String) respJSON.get("error");
 			throw new RuntimeException(strErr);
 		}
-		JSONObject data = (JSONObject) respJSON.get("data");
+		Object data = (Object) respJSON.get("data");
 
 		return data;
 
