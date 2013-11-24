@@ -131,16 +131,16 @@ interface RmbtbApi {
 	/**
 	 * Gets your 50 most recent trades
 	 *
-	 * @return JSONObject of info
+	 * @return JSONArray of trades
 	 */
-	public JSONObject getTrades() throws Exception;
+	public JSONArray getTrades() throws Exception;
 
 	/**
 	 * returns the most recent market transactions
 	 *
-	 * @return JSONObject of info
+	 * @return JSONArray of trades
 	 */
-	public JSONObject lastTrades() throws Exception;
+	public JSONArray lastTrades() throws Exception;
 
 	/**
 	 * returns the market depth
@@ -243,13 +243,13 @@ public class RmbtbSecureApi implements RmbtbApi {
 	}
 
 	@Override
-	public JSONObject getTrades() throws Exception {
-		return (JSONObject) doRequest("trades/mine", "GET", true);
+	public JSONArray getTrades() throws Exception {
+		return (JSONArray) doRequest("trades/mine", "GET", true);
 	}
 
 	@Override
-	public JSONObject lastTrades() throws Exception {
-		return (JSONObject) doRequest("trades/all", "GET", false);
+	public JSONArray lastTrades() throws Exception {
+		return (JSONArray) doRequest("trades/all", "GET", false);
 	}
 
 	@Override
@@ -419,7 +419,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 			String strErr = (String) respJSON.get("error");
 			throw new RuntimeException(strErr);
 		}
-		Object data = (Object) respJSON.get("data");
+		Object data = respJSON.get("data");
 
 		return data;
 
