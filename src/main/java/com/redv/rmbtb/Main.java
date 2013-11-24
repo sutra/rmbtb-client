@@ -1,5 +1,6 @@
 package com.redv.rmbtb;
 
+import java.io.File;
 import java.util.List;
 
 import com.redv.rmbtb.domain.Depth;
@@ -14,8 +15,9 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		final String pubkey = args[0];
 		final String passphrase = args[1];
+		final File rmbtbSecretData = args.length >= 3 ? new File(args[2]) : new File("rmbtb-secret-data.dat");
 
-		RmbtbSecureApiClient client = new RmbtbSecureApiClient(pubkey, passphrase);
+		RmbtbSecureApiClient client = new RmbtbSecureApiClient(pubkey, passphrase, rmbtbSecretData);
 
 		Info info = client.getInfo();
 		System.out.println(info);

@@ -54,8 +54,6 @@ import org.slf4j.LoggerFactory;
  * The RMBTB Secure API class. Set the constants here.
  */
 interface RmbtbApi {
-	// Set this to the location you want to store temporary secrets
-	public static final String StorLocation = "rmbtb-secret-data.dat";
 
 	public static final String urlBaseLoc = "https://www.rmbtb.com/api/secure/";
 
@@ -155,23 +153,26 @@ public class RmbtbSecureApi implements RmbtbApi {
 
 	private final Logger log = LoggerFactory.getLogger(RmbtbSecureApi.class);
 
+	private final File rmbtbSecretData;
+
 	private String currPair;
 	private String pubkey;
 	private String passphrase;
 	private String secret;
 	private Calendar expires;
 
-	public RmbtbSecureApi(String pubkey, String passphrase) {
-		this(pubkey, passphrase, "BTCCNY");
+	public RmbtbSecureApi(String pubkey, String passphrase, File rmbtbSecretData) {
+		this(pubkey, passphrase, rmbtbSecretData, "BTCCNY");
 	}
 
-	public RmbtbSecureApi(String pubkey, String passphrase, String currPair) {
+	public RmbtbSecureApi(String pubkey, String passphrase, File rmbtbSecretData, String currPair) {
 
 		log.debug("pubKey: {}, passphrase: {}", pubkey, passphrase);
 
 		this.currPair = currPair;
 		this.pubkey = pubkey;
 		this.passphrase = passphrase;
+		this.rmbtbSecretData = rmbtbSecretData;
 
 		secret = null;
 		expires = Calendar.getInstance();
@@ -311,7 +312,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 	private void loadSecret() throws UnsupportedEncodingException, IOException,
 			ParseException {
 
-		File dat = new File(StorLocation);
+		File dat = rmbtbSecretData;
 
 		// Load secret from file
 		if (dat.exists()) {

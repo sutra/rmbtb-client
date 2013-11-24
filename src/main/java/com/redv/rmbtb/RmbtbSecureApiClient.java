@@ -1,5 +1,6 @@
 package com.redv.rmbtb;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,13 @@ public class RmbtbSecureApiClient {
 
 	private RmbtbSecureApi api;
 
-	public RmbtbSecureApiClient(String pubkey, String passphrase) {
-		this(pubkey, passphrase, "BTCCNY");
+	public RmbtbSecureApiClient(String pubkey, String passphrase, File rmbtbSecretData) {
+		this(pubkey, passphrase, rmbtbSecretData, "BTCCNY");
 	}
 
-	public RmbtbSecureApiClient(String pubkey, String passphrase, String currPair) {
-		api = new RmbtbSecureApi(pubkey, passphrase, currPair);
+	public RmbtbSecureApiClient(String pubkey, String passphrase,
+			File rmbtbSecretData, String currPair) {
+		api = new RmbtbSecureApi(pubkey, passphrase, rmbtbSecretData, currPair);
 	}
 
 	public Info getInfo() throws RmbtbSecureApiException {
