@@ -271,6 +271,12 @@ public class RmbtbSecureApi implements RmbtbApi {
 		if (auth) {
 			Calendar maxAge = Calendar.getInstance();
 			maxAge.add(Calendar.MINUTE, -1);
+
+			if (log.isDebugEnabled()) {
+				log.debug("secret: {}, expires: {}, maxAge: {}.",
+						secret, expires.getTime(), maxAge.getTime());
+			}
+
 			if (secret == null || expires.before(maxAge)) {
 				loadSecret();
 			}
@@ -324,6 +330,11 @@ public class RmbtbSecureApi implements RmbtbApi {
 
 			Calendar maxAge = Calendar.getInstance();
 			maxAge.add(Calendar.MINUTE, -1);
+
+			if (log.isDebugEnabled()) {
+				log.debug("expires: {}, maxAge: {}.",
+						expires.getTime(), maxAge.getTime());
+			}
 
 			if (expires.after(maxAge)) {
 				log.debug("The secret does not expire.");
