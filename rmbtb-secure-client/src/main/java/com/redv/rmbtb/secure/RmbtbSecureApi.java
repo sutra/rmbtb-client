@@ -374,7 +374,7 @@ public class RmbtbSecureApi implements RmbtbApi {
 		secret = (String) data.get("secret");
 
 		if (log.isDebugEnabled()) {
-			log.debug("Got secret by API calling, the secrit is {}, length is {}.", secret, secret.length());
+			log.debug("Got secret by API calling, the secret is {}, length is {}.", secret, secret.length());
 		}
 
 		expires = Calendar.getInstance();
